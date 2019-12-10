@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.ProviderMapper">
+
+    <insert id="addProvider" parameterType="Provider">
+        INSERT INTO smbms_provider(proCode,proName) VALUES(#{proCode},#{proName})
+    </insert>
+
+    <update id="updateProvider">
+        UPDATE smbms_provider
+        <trim prefix="set" suffixOverrides="," suffix="where proCode=#{proCode}">
+            <if test="proName!=null and proName!=''">proName = #{proName},</if>
+        </trim>
+    </update>
+
+    <delete id="delProvider">
+        DELETE FROM smbms_provider WHERE id=#{sid}
+    </delete>
+
+    <resultMap id="providerList" type="Provider">
+        <id property="id" column="id"></id>
+        <result property="proCode" column="proCode"></result>
+        <result property="proName" column="proName"></result>
+        <result property="proContact" column="proContact"></result>
+        <result property="proPhone" column="proPhone"></result>
+        <collection property="billList" ofType="Bill" resultMap="billList"></collection>
+    </resultMap>
+
+    <resultMap id="billList" type="Bill">
+        <id property="id" column="id"></id>
+        <result property="billCode" column="billCode"></result>
+        <result property="productName" column="productName"></result>
+        <result property="totalPrice" column="totalPrice"></result>
+        <result property="isPayment" column="isPayment"></result>
+    </resultMap>
+
+    <select id="providerIdList" resultMap="providerList">
+        SELECT p.id,p.proCode,p.proName,p.proContact,p.proPhone,b.billCode,b.productName,b.totalPrice,b.isPayment
+        FROM `smbms_provider` p
+        INNER JOIN `smbms_bill` b ON b.providerId = p.id
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="providerByCodeAndName" resultType="Provider">
+        SELECT id,proCode,proName,proDesc,proContact,proPhone,proFax,creationDate
+        FROM smbms_provider
+        <where>
+            <if test="proCode!=null and proCode!=''">
+                and proCode LIKE CONCAT('%',#{proCode},'%')
+            </if>
+            <if test="proName!=null and proName!=''">
+                AND proName LIKE CONCAT('%',#{proName},'%')
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="proList" type="Provider">
+        <id property="id" column="id"></id>
+        <collection property="billList" ofType="Bill">
+            <id property="id" column="id"></id>
+            <result property="billCode" column="billCode"></result>
+            <result property="productName" column="productName"></result>
+            <result property="productDesc" column="productDesc"></result>
+            <result property="productUnit" column="productUnit"></result>
+        </collection>
+    </resultMap>
+
+    <select id="providerByIdList" resultMap="proList">
+        SELECT b.* FROM smbms_provider p
+        INNER JOIN smbms_bill b ON b.providerId = p.id
+        WHERE
+            b.id
+        IN
+            <foreach collection="list" item="ids" open="(" separator="," close=")">
+                #{ids}
+            </foreach>
+    </select>
+
+    <select id="proByCodeAndNameAndContactAndCreateDate" resultType="Provider">
+        SELECT id,proCode,proName,proContact,creationDate FROM smbms_provider WHERE 1=1
+        <choose>
+            <when test="proCode!=null and proCode!=''">
+                and proCode like concat('%',#{proCode},'%')
+            </when>
+            <when test="proName!=null and proName!=''">
+                and proName like concat('%',#{proName},'%')
+            </when>
+            <when test="proContact!=null and proContact!=''">
+                and proContact like concat('%',#{proContact},'%')
+            </when>
+            <otherwise>
+                AND
+                    YEAR(creationDate)
+                IN
+                    (SELECT MAX(YEAR(creationDate)) FROM smbms_provider)
+                ORDER BY
+                    creationDate
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM smbms_provider
+    </select>
+
+    <select id="providerLimit" resultType="Provider">
+        SELECT * FROM smbms_provider ORDER BY creationDate DESC LIMIT #{currentPageNo},#{pageSize}
+    </select>
+</mapper>
