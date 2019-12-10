@@ -1,9 +1,9 @@
 package entity;
 
 import java.util.Date;
-//哈哈
+
 //订单表
-//测试一下
+//测试一下,haha
 
 public class Bill {
 
