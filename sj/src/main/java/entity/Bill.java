@@ -1,11 +1,10 @@
 package entity;
 
 import java.util.Date;
-
+//哈哈
 //订单表
 //测试一下
 
-//哈哈
 public class Bill {
 
     private int id;                 //主键ID
